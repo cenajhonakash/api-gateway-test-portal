@@ -32,8 +32,9 @@ public class AuthenticationFilterFactory extends AbstractGatewayFilterFactory<Au
 	@Override
 	public GatewayFilter apply(Config config) {
 		return ((exchange, chain) -> {
+			// ServerHttpRequest request;
 			try {
-				log.info("filter applied for exchange: {}", exchange.getRequest().getHeaders());
+				log.info("filter applied for exchange: {}", exchange.getRequest().getURI().getPath());
 				autheticationService.validateExchangeRequest(exchange);
 			} catch (Exception e) {
 				log.error("Invalid access to resource: {}", e.getMessage());

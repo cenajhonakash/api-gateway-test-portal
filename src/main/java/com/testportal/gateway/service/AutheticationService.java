@@ -6,6 +6,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -31,8 +32,11 @@ public class AutheticationService {
 	private String validateTokenPath;
 
 	public void validateExchangeRequest(ServerWebExchange exchange) throws Exception {
+
 		if (routeValidatorHelper.isSecured.test(exchange.getRequest())) {
 			// log.info("Unauthorized endpoint: {}", exchange.getRequest().getURI().getPath());
+			ServerHttpRequest request = exchange.getRequest().mutate().header(AppConstants.exchangeRequestUri.name(), exchange.getRequest().getURI().getPath())
+					.header(AppConstants.exchangeRequestMethod.name(), exchange.getRequest().getMethod().name()).build();
 			if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
 				log.debug("Missing Authorization Header");
 				throw new AccessDeniedException("Missing Authorization Header");
@@ -41,8 +45,15 @@ public class AutheticationService {
 			if (authHeader != null && authHeader.startsWith(AppConstants.Bearer.name())) {
 				authHeader = authHeader.substring(7);
 			}
-			final HttpHeaders headers = exchange.getRequest().getHeaders();
+			HttpHeaders headers = request.getHeaders();
+//			MultiValueMap<String, String> mvp = new LinkedMultiValueMap<>();
+//			mvp.add(AppConstants.exchangeRequestUri.name(), exchange.getRequest().getURI().getPath());
+//			mvp.add(AppConstants.exchangeRequestMethod.name(), exchange.getRequest().getMethod().name());
+//			headers.addAll(mvp);
+//			// headers.add(AppConstants.exchangeRequestUri.name(), exchange.getRequest().getURI().getPath());
+			// headers.add(AppConstants.exchangeRequestMethod.name(), exchange.getRequest().getMethod().name());
 			MultiValueMap<String, String> queryParams = exchange.getRequest().getQueryParams();
+
 			final String urlTemplate = UriComponentsBuilder.fromHttpUrl(validateTokenPath).queryParams(queryParams).build().encode().toUriString();
 			// final String urlTemplate = UriComponentsBuilder.fromHttpUrl(validateTokenPath).build().encode().toUriString();
 			log.info("url created: {}", urlTemplate);
